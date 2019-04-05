@@ -3,77 +3,82 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, PermissionsAndroid, Platform, Alert } from 'react-native';
 
 import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
+import { thisTypeAnnotation } from '@babel/types';
+
 
 export default class App extends React.Component {
   state = {
     currentLongitude: 'unknown',//Initial Longitude
     currentLatitude: 'unknown',//Initial Latitude
     isConnected: true,
-    isOutdoor: false
+    isOutdoor: false,
+    webSock: null
 
   }
   componentDidMount = () => {
-    var connection = new WebSocket('ws://192.168.43.108:4000')
+    // var connection = new WebSocket('ws://192.168.1.43:4000')
+    // var temp = this;
+    var connection = this.connectWS();
     this.ws = connection
-    var temp = this;
-    connection.onopen = function () {
-      // จะทำงานเมื่อเชื่อมต่อสำเร็จ
-      console.log("connect webSocket");
-      // temp.setState({ isConnected: true });
-      connection.send("ID: 00001, connected"); // ส่ง Data ไปที่ Server
-    };
-    connection.onerror = function (error) {
-      console.error('WebSocket Error ' + error);
-      // temp.setState({ isConnected: false });
-      connection.close();
-    };
-    connection.onmessage = function (e) {
-      // log ค่าที่ถูกส่งมาจาก server
-      console.log('message from server: ', e.data);
-      if (e.data === 'stop') {
-        console.log('Request from server: stop');
-        temp.setState({ isOutdoor: false });
-      }
+    
+    // connection.onopen = function () {
+    //   // จะทำงานเมื่อเชื่อมต่อสำเร็จ
+    //   console.log("connect webSocket");
+    //   // temp.setState({ isConnected: true });
+    //   connection.send("ID: 00001, connected"); // ส่ง Data ไปที่ Server
+    // };
+    // connection.onerror = function (error) {
+    //   console.warn('WebSocket Error ' + error);
+    //   // temp.setState({ isConnected: false });
+    //   connection.close();
+    // };
+    // connection.onmessage = function (e) {
+    //   // log ค่าที่ถูกส่งมาจาก server
+    //   console.log('message from server: ', e.data);
+    //   if (e.data === 'stop') {
+    //     console.log('Request from server: stop');
+    //     temp.setState({ isOutdoor: false });
+    //   }
 
-      else if (e.data === 'start') {
-        console.log('Request from server: start');
-        temp.setState({ isOutdoor: true });
-      }
-    };
-
+    //   else if (e.data === 'start') {
+    //     console.log('Request from server: start');
+    //     temp.setState({ isOutdoor: true });
+    //   }
+    // };
     // connection.onclose = function(e) {
     //   console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
     //   setTimeout(function() {
-    //     connect();
+    //     temp.connectWS();
     //   }, 1000);
     // };
+  
 
-    BackgroundGeolocation.configure({
-      desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-      stationaryRadius: 50,
-      distanceFilter: 50,
-      debug: false,
-      startOnBoot: false,
-      stopOnTerminate: true,
-      locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
-      interval: 10000,
-      fastestInterval: 5000,
-      activitiesInterval: 10000,
-      stopOnStillActivity: false,
+    // BackgroundGeolocation.configure({
+    //   desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
+    //   stationaryRadius: 50,
+    //   distanceFilter: 50,
+    //   debug: false,
+    //   startOnBoot: false,
+    //   stopOnTerminate: true,
+    //   locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+    //   interval: 10000,
+    //   fastestInterval: 5000,
+    //   activitiesInterval: 10000,
+    //   stopOnStillActivity: false,
 
-    });
+    // });
 
-    BackgroundGeolocation.on('authorization', (status) => {
-      console.log('[INFO] BackgroundGeolocation authorization status: ' + status);
-      if (status !== BackgroundGeolocation.AUTHORIZED) {
-        // we need to set delay or otherwise alert may not be shown
-        setTimeout(() =>
-          Alert.alert('App requires location tracking permission', 'Would you like to open app settings?', [
-            { text: 'Yes', onPress: () => BackgroundGeolocation.showAppSettings() },
-            { text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel' }
-          ]), 1000);
-      }
-    });
+    // BackgroundGeolocation.on('authorization', (status) => {
+    //   console.log('[INFO] BackgroundGeolocation authorization status: ' + status);
+    //   if (status !== BackgroundGeolocation.AUTHORIZED) {
+    //     // we need to set delay or otherwise alert may not be shown
+    //     setTimeout(() =>
+    //       Alert.alert('App requires location tracking permission', 'Would you like to open app settings?', [
+    //         { text: 'Yes', onPress: () => BackgroundGeolocation.showAppSettings() },
+    //         { text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel' }
+    //       ]), 1000);
+    //   }
+    // });
 
 
     var that = this;
@@ -105,6 +110,8 @@ export default class App extends React.Component {
   }
   callLocation(that) {
 
+    // that.ws.send('hello')
+
     navigator.geolocation.getCurrentPosition(
 
       (position) => {
@@ -120,14 +127,16 @@ export default class App extends React.Component {
 
         if(that.state.isConnected === true){
           if(that.state.isOutdoor === true){
-            that.ws.send('s-longitude: ' + currentLongitude + ', s-latitude: ' + currentLatitude);
+            // console.log('sendLoLa');
+            // that.ws.send('s-longitude: ' + currentLongitude + ', s-latitude: ' + currentLatitude);
+            that.state.webSock.send('s-longitude: ' + currentLongitude + ', s-latitude: ' + currentLatitude);
           }
         }
         // that.ws.send('s-longitude: ' + currentLongitude + ', s-latitude: ' + currentLatitude);
 
       },
       (error) => alert(error.message),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 0.5 }
     );
 
     // const data = "longitude";
@@ -146,42 +155,84 @@ export default class App extends React.Component {
 
       if(that.state.isConnected === true){
         if(that.state.isOutdoor === true){
-          that.ws.send('longitude: ' + currentLongitude + ', latitude: ' + currentLatitude);
+          // console.log('sendLoLa');
+          // that.ws.send('longitude: ' + currentLongitude + ', latitude: ' + currentLatitude);
+          that.state.webSock.send('s-longitude: ' + currentLongitude + ', s-latitude: ' + currentLatitude);
         }
       }
 
       // that.ws.send('longitude: ' + currentLongitude + ', latitude: ' + currentLatitude);
+    },
+    (error) => alert(error.message),
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 0.5 }
+    );
 
-    });
+    // BackgroundGeolocation.on('location', (location) => {
+    //   // console.log('[INFO] BackgroundGeolocation service has been started');
 
-    BackgroundGeolocation.on('location', (location) => {
-      // console.log('[INFO] BackgroundGeolocation service has been started');
+    //   // that.setState({ currentLongitude: location.longitude});
 
-      // that.setState({ currentLongitude: location.longitude});
+    //   // that.setState({ currentLatitude: location.latitude});
 
-      // that.setState({ currentLatitude: location.latitude});
+    //   // that.ws.send('b-longitude: ' + location.longitude + ', b-latitude: ' + location.latitude);
+    //   // that.ws.send('b-working');
 
-      // that.ws.send('b-longitude: ' + location.longitude + ', b-latitude: ' + location.latitude);
-      // that.ws.send('b-working');
-
-    });
-
-
-    BackgroundGeolocation.checkStatus(status => {
-      // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-      // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-      // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+    // });
 
 
-      // you don't need to check status before start (this is just the example)
-      if (!status.isRunning) {
-        BackgroundGeolocation.start(); //triggers start on start event
-      }
-    });
+    // BackgroundGeolocation.checkStatus(status => {
+    //   // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+    //   // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+    //   // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+
+
+    //   // you don't need to check status before start (this is just the example)
+    //   if (!status.isRunning) {
+    //     BackgroundGeolocation.start(); //triggers start on start event
+    //   }
+    // });
 
   }
-  
 
+  connectWS = () => {
+    var ws = new WebSocket('ws://192.168.1.43:4000');
+    var temp = this;
+    this.setState({webSock:ws});
+
+    ws.onopen = function () {
+      // จะทำงานเมื่อเชื่อมต่อสำเร็จ
+      console.log("connect webSocket");
+      // temp.setState({ isConnected: true });
+      ws.send("ID: 00001, connected"); // ส่ง Data ไปที่ Server
+    };
+    ws.onerror = function (error) {
+      console.warn('WebSocket Error ' + error);
+      // temp.setState({ isConnected: false });
+      ws.close();
+    };
+    ws.onmessage = function (e) {
+      // log ค่าที่ถูกส่งมาจาก server
+      console.log('message from server: ', e.data);
+      if (e.data === 'stop') {
+        console.log('Request from server: stop');
+        temp.setState({ isOutdoor: false });
+      }
+
+      else if (e.data === 'start') {
+        console.log('Request from server: start');
+        temp.setState({ isOutdoor: true });
+      }
+    };
+    ws.onclose = function(e) {
+      console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+      setTimeout(function() {
+        temp.connectWS();
+      }, 1000);
+    }
+
+    // return ws;
+  }
+  
   checkOutdoor = () => {
     if(this.state.isOutdoor===true){
       return (
