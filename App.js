@@ -197,16 +197,20 @@ export default class App extends React.Component {
   connectWS = () => {
     var ws = new WebSocket('ws://192.168.1.43:4000');
     var temp = this;
-    this.setState({webSock:ws});
+    
 
     ws.onopen = function () {
+      temp.setState({webSock:ws, isConnected: true});
+      console.log('isConnected:', temp.state.isConnected);
       // จะทำงานเมื่อเชื่อมต่อสำเร็จ
       console.log("connect webSocket");
       // temp.setState({ isConnected: true });
       ws.send("ID: 00001, connected"); // ส่ง Data ไปที่ Server
     };
     ws.onerror = function (error) {
-      console.warn('WebSocket Error ' + error);
+      temp.setState({isConnected: false});
+      console.log('isConnected:', temp.state.isConnected);
+      // console.warn('WebSocket Error ' + error);
       // temp.setState({ isConnected: false });
       ws.close();
     };
@@ -224,6 +228,7 @@ export default class App extends React.Component {
       }
     };
     ws.onclose = function(e) {
+      // temp.setState({isConnected: false});
       console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
       setTimeout(function() {
         temp.connectWS();
@@ -236,15 +241,32 @@ export default class App extends React.Component {
   checkOutdoor = () => {
     if(this.state.isOutdoor===true){
       return (
-        <Text>
+        <Text style={{color: "purple"}}>
           Outdoor
         </Text>
       )
     }
     else if(this.state.isOutdoor===false){
       return (
-        <Text>
-          Not outdoor
+        <Text style={{color: "blue"}}>
+          Indoor
+        </Text>
+      )
+    }
+  }
+
+  checkIsConnected = () => {
+    if(this.state.isConnected===true){
+      return (
+        <Text style={{color: "green"}}>
+          Connected
+        </Text>
+      )
+    }
+    else if(this.state.isConnected===false){
+      return (
+        <Text style={{color: "red"}}>
+          Disconnected
         </Text>
       )
     }
@@ -272,6 +294,8 @@ export default class App extends React.Component {
         </Text>
 
         {this.checkOutdoor()}
+        {this.checkIsConnected()}
+
       </View>
     )
   }
