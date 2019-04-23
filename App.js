@@ -10,47 +10,18 @@ export default class App extends React.Component {
   state = {
     currentLongitude: 'unknown',//Initial Longitude
     currentLatitude: 'unknown',//Initial Latitude
-    isConnected: true,
+    isConnected: false,
     isOutdoor: false,
-    webSock: null
+    webSock: null,
+    updateNum: 0
 
   }
   componentDidMount = () => {
     // var connection = new WebSocket('ws://192.168.1.43:4000')
     // var temp = this;
+
     var connection = this.connectWS();
     this.ws = connection
-    
-    // connection.onopen = function () {
-    //   // จะทำงานเมื่อเชื่อมต่อสำเร็จ
-    //   console.log("connect webSocket");
-    //   // temp.setState({ isConnected: true });
-    //   connection.send("ID: 00001, connected"); // ส่ง Data ไปที่ Server
-    // };
-    // connection.onerror = function (error) {
-    //   console.warn('WebSocket Error ' + error);
-    //   // temp.setState({ isConnected: false });
-    //   connection.close();
-    // };
-    // connection.onmessage = function (e) {
-    //   // log ค่าที่ถูกส่งมาจาก server
-    //   console.log('message from server: ', e.data);
-    //   if (e.data === 'stop') {
-    //     console.log('Request from server: stop');
-    //     temp.setState({ isOutdoor: false });
-    //   }
-
-    //   else if (e.data === 'start') {
-    //     console.log('Request from server: start');
-    //     temp.setState({ isOutdoor: true });
-    //   }
-    // };
-    // connection.onclose = function(e) {
-    //   console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
-    //   setTimeout(function() {
-    //     temp.connectWS();
-    //   }, 1000);
-    // };
   
 
     // BackgroundGeolocation.configure({
@@ -109,6 +80,7 @@ export default class App extends React.Component {
     }
   }
   callLocation(that) {
+    var num = that.state.updateNum;
 
     // that.ws.send('hello')
 
@@ -136,7 +108,7 @@ export default class App extends React.Component {
 
       },
       (error) => alert(error.message),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 0.5 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 0.3 }
     );
 
     // const data = "longitude";
@@ -153,18 +125,22 @@ export default class App extends React.Component {
 
       that.setState({ currentLatitude: currentLatitude });
 
+      num = num + 1;
+
+      that.setState({updateNum: num});
+
       if(that.state.isConnected === true){
         if(that.state.isOutdoor === true){
           // console.log('sendLoLa');
           // that.ws.send('longitude: ' + currentLongitude + ', latitude: ' + currentLatitude);
-          that.state.webSock.send('s-longitude: ' + currentLongitude + ', s-latitude: ' + currentLatitude);
+          that.state.webSock.send('longitude: ' + currentLongitude + ', latitude: ' + currentLatitude);
         }
       }
 
       // that.ws.send('longitude: ' + currentLongitude + ', latitude: ' + currentLatitude);
     },
     (error) => alert(error.message),
-    { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 0.5 }
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 0.3 }
     );
 
     // BackgroundGeolocation.on('location', (location) => {
@@ -195,7 +171,7 @@ export default class App extends React.Component {
   }
 
   connectWS = () => {
-    var ws = new WebSocket('ws://192.168.1.43:4000');
+    var ws = new WebSocket('ws://192.168.0.108:4000');
     var temp = this;
     
 
@@ -241,14 +217,14 @@ export default class App extends React.Component {
   checkOutdoor = () => {
     if(this.state.isOutdoor===true){
       return (
-        <Text style={{color: "purple"}}>
+        <Text style={{color: "blue"}}>
           Outdoor
         </Text>
       )
     }
     else if(this.state.isOutdoor===false){
       return (
-        <Text style={{color: "blue"}}>
+        <Text style={{color: "darkorange"}}>
           Indoor
         </Text>
       )
@@ -295,6 +271,10 @@ export default class App extends React.Component {
 
         {this.checkOutdoor()}
         {this.checkIsConnected()}
+
+        {/* <Text>
+          {this.state.updateNum}
+        </Text> */}
 
       </View>
     )
