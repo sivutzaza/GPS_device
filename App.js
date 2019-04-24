@@ -3,8 +3,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, PermissionsAndroid, Platform, Alert } from 'react-native';
 
 import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
-import { thisTypeAnnotation } from '@babel/types';
-
 
 export default class App extends React.Component {
   state = {
