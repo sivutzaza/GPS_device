@@ -188,7 +188,7 @@ export default class App_v2 extends React.Component {
   updateLocation = () => {
     const newLatitude = this.state.currentLatitude
     const newLongitude = this.state.currentLongitude
-    db.ref('/patients').child(this.state.id).update({latitude: this.state.currentLatitude, longitude: this.state.currentLongitude})
+    db.ref('/patients').child(this.state.id).child('/GPS').update({latitude: this.state.currentLatitude, longitude: this.state.currentLongitude})
   }
 
   componentWillUnmount = () => {
