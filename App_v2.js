@@ -174,8 +174,8 @@ export default class App_v2 extends React.Component {
     const temp = this
     db.ref('/patients').child(this.state.id).on("value", function (snapshot) {
       item = snapshot.val()
-      console.log('this is updated latitude:', item.latitude)
-      console.log('this is updated longitude:', item.longitude)
+      console.log('this is updated latitude:', item.GPS.latitude)
+      console.log('this is updated longitude:', item.GPS.longitude)
       if (item.status === 'out') {
         temp.setState({ isOutdoor: true })
       }
@@ -186,9 +186,10 @@ export default class App_v2 extends React.Component {
   }
 
   updateLocation = () => {
-    const newLatitude = this.state.currentLatitude
-    const newLongitude = this.state.currentLongitude
-    db.ref('/patients').child(this.state.id).child('/GPS').update({latitude: this.state.currentLatitude, longitude: this.state.currentLongitude})
+    const newLatitude = Number(this.state.currentLatitude)
+    const newLongitude = Number(this.state.currentLongitude)
+
+    db.ref('/patients').child(this.state.id).child('/GPS').update({latitude: newLatitude, longitude: newLongitude})
   }
 
   componentWillUnmount = () => {
